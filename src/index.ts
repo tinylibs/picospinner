@@ -1,5 +1,5 @@
 import * as constants from './constants';
-import {countLines} from './string-lines';
+import {Renderer, TextComponent} from './renderer';
 
 export type Formatter = (input: string) => string;
 
@@ -16,6 +16,9 @@ export type Symbols = {
   info: string;
 };
 
+// Global renderer so that multiple spinners can run at the same time
+const renderer = new Renderer();
+
 export class Spinner {
   public running = false;
 
@@ -26,9 +29,7 @@ export class Spinner {
   private frameIndex = 0;
   private symbols: Symbols;
   private frames: string[];
-  private terminalWidth: number = Infinity;
-  private lastLinesAmt = 0;
-  private framesLineCountCache: number[] = [];
+  private component = new TextComponent('');
 
   constructor(display: DisplayOptions | string = '', {frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>} = {}) {
     // Merge symbols with defaults
@@ -40,59 +41,41 @@ export class Spinner {
 
     this.frames = frames;
     this.currentSymbol = frames[0];
-    this.framesLineCountCache = new Array(frames.length).fill(-1);
   }
 
   start(tickMs = constants.DEFAULT_TICK_MS) {
+    if (this.running) throw new Error('Spinner is already running.');
+
     this.interval = setInterval(this.tick.bind(this), tickMs);
     this.running = true;
-    if (process.stdout.getWindowSize) this.terminalWidth = process.stdout.getWindowSize()[0];
     this.currentSymbol = this.frames[0];
-    this.framesLineCountCache.fill(-1);
+
+    this.tick();
+    renderer.addComponent(this.component);
   }
 
   tick() {
     this.currentSymbol = this.frames[this.frameIndex++];
     if (this.frameIndex === this.frames.length) this.frameIndex = 0;
-    this.render();
+    this.refresh();
   }
 
-  private clearMultiLineOutput() {
-    for (let i = 0; i < this.lastLinesAmt - 1; i++) {
-      process.stdout.write(constants.CLEAR_LINE + constants.UP_LINE);
-    }
-    process.stdout.write(constants.CLEAR_LINE);
-  }
-
-  private getLineCount(output: string) {
-    let amount = this.framesLineCountCache[this.frameIndex];
-    if (amount !== -1) return amount;
-    amount = countLines(output, this.terminalWidth);
-    this.framesLineCountCache[this.frameIndex] = amount;
-    return amount;
-  }
-
-  render() {
+  refresh() {
     let symbol = this.currentSymbol;
     if (this.symbolFormatter) symbol = this.symbolFormatter(symbol);
-
-    this.clearMultiLineOutput();
-
     const output = (symbol ? symbol + ' ' : '') + this.text;
-    this.lastLinesAmt = this.getLineCount(output);
 
-    process.stdout.write(constants.HIDE_CURSOR + output);
+    this.component.setText(constants.HIDE_CURSOR + output);
   }
 
   setDisplay(displayOpts: DisplayOptions = {}, render = true) {
     if (typeof displayOpts.symbol === 'string') {
       this.currentSymbol = displayOpts.symbol;
-      this.framesLineCountCache.fill(-1);
     }
     if (typeof displayOpts.text === 'string') this.setText(displayOpts.text, false);
     if (displayOpts.symbolFormatter) this.symbolFormatter = displayOpts.symbolFormatter;
 
-    if (render) this.render();
+    if (render) this.refresh();
     if (typeof displayOpts.symbol === 'string') this.end();
   }
 
@@ -100,8 +83,7 @@ export class Spinner {
     this.text = text;
     if (this.running) {
       // Clear width cache
-      this.framesLineCountCache.fill(-1);
-      if (render) this.render();
+      if (render) this.refresh();
     }
   }
 
@@ -126,14 +108,13 @@ export class Spinner {
   }
 
   stop() {
-    this.clearMultiLineOutput();
     this.end(false);
   }
 
-  private end(newLine = true) {
+  private end(keepComponent = true) {
     clearInterval(this.interval);
-    process.stdout.write(constants.SHOW_CURSOR + (newLine ? '\n' : ''));
+    if (keepComponent) this.component.finish();
+    else renderer.removeComponent(this.component);
     this.running = false;
-    this.lastLinesAmt = 0;
   }
 }
