@@ -17,7 +17,7 @@ export type Symbols = {
 };
 
 // Global renderer so that multiple spinners can run at the same time
-const renderer = new Renderer();
+export const renderer = new Renderer();
 
 export class Spinner {
   public running = false;
@@ -65,7 +65,7 @@ export class Spinner {
     if (this.symbolFormatter) symbol = this.symbolFormatter(symbol);
     const output = (symbol ? symbol + ' ' : '') + this.text;
 
-    this.component.setText(constants.HIDE_CURSOR + output);
+    this.component.setText(output);
   }
 
   setDisplay(displayOpts: DisplayOptions = {}, render = true) {

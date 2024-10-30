@@ -2,12 +2,12 @@ import capcon from 'capture-console';
 import * as constants from '../constants';
 import {isAbsolute} from 'path';
 
-export function createRenderedLine(symbol: string, text: string) {
-  return constants.CLEAR_LINE + constants.HIDE_CURSOR + (symbol ? symbol + ' ' : '') + text;
+export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false) {
+  return (!firstLine ? constants.CLEAR_LINE + constants.UP_LINE : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR + (symbol ? symbol + ' ' : '') + text + '\n';
 }
 
 export function createFinishingRenderedLine(symbol: string, text: string) {
-  return createRenderedLine(symbol, text) + constants.SHOW_CURSOR + '\n';
+  return createRenderedLine(symbol, text) + constants.SHOW_CURSOR;
 }
 
 export async function interceptStdout(exec: () => Promise<void> | void) {
