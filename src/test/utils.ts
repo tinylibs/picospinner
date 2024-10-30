@@ -1,6 +1,7 @@
 import capcon from 'capture-console';
 import * as constants from '../constants';
 import {isAbsolute} from 'path';
+import {Spinner} from '..';
 
 export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false) {
   return (!firstLine ? constants.CLEAR_LINE + constants.UP_LINE : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR + (symbol ? symbol + ' ' : '') + text + '\n';
@@ -59,5 +60,19 @@ function getCallstack() {
 
       return path.replaceAll('\\', '/');
     });
+  }
+}
+
+export class TickMeasuredSpinner extends Spinner {
+  public tickCount = 0;
+
+  constructor(...args: any[]) {
+    super(...args);
+
+    const originalTick = this.tick.bind(this);
+    this.tick = () => {
+      this.tickCount++;
+      originalTick();
+    };
   }
 }

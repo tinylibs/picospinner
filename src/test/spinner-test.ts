@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {Spinner, Symbols, renderer} from '..';
-import {createFinishingRenderedLine, createRenderedLine, interceptStdout} from './utils.js';
+import {createFinishingRenderedLine, createRenderedLine, interceptStdout, TickMeasuredSpinner} from './utils.js';
 import * as constants from '../constants';
 
 async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
@@ -60,17 +60,18 @@ test('end methods', async (t) => {
       spinner.setDisplay({symbol: ''});
     });
 
-    assert.equal(stdout, createFinishingRenderedLine('', ''));
+    assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + createFinishingRenderedLine('', ''));
   });
 });
 
 async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string) {
   renderer._reset();
 
+  const spinner = new TickMeasuredSpinner({text, symbolFormatter}, {frames});
+
   const stdout = await interceptStdout(
     () =>
       new Promise((resolve) => {
-        const spinner = new Spinner({text, symbolFormatter}, {frames});
         spinner.start();
         setTimeout(
           () => {
@@ -82,12 +83,14 @@ async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (
       })
   );
 
+  assert.ok(spinner.tickCount > 11 && spinner.tickCount < 14);
+
   if (!frames) frames = constants.DEFAULT_FRAMES;
   if (symbolFormatter) frames = frames.map(symbolFormatter);
 
   assert.equal(
     stdout,
-    new Array(12)
+    new Array(spinner.tickCount)
       .fill(undefined)
       .map((_, i) => {
         return createRenderedLine(frames[i % frames.length], text ?? '', i === 0);
