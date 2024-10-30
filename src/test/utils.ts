@@ -1,7 +1,7 @@
 import capcon from 'capture-console';
 import * as constants from '../constants';
 import {isAbsolute} from 'path';
-import {Spinner} from '..';
+import {DisplayOptions, Spinner, Symbols} from '..';
 
 export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false) {
   return (!firstLine ? constants.CLEAR_LINE + constants.UP_LINE : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR + (symbol ? symbol + ' ' : '') + text + '\n';
@@ -66,8 +66,14 @@ function getCallstack() {
 export class TickMeasuredSpinner extends Spinner {
   public tickCount = 0;
 
-  constructor(...args: any[]) {
-    super(...args);
+  constructor(
+    display?: DisplayOptions | string,
+    opts?: {
+      frames?: string[] | undefined;
+      symbols?: Partial<Symbols> | undefined;
+    }
+  ) {
+    super(display, opts);
 
     const originalTick = this.tick.bind(this);
     this.tick = () => {
