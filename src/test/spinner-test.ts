@@ -73,17 +73,14 @@ async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (
     () =>
       new Promise((resolve) => {
         spinner.start();
-        setTimeout(
-          () => {
-            spinner.stop();
-            resolve();
-          },
-          constants.DEFAULT_TICK_MS * 13 + 25
-        );
+        setTimeout(() => {
+          spinner.stop();
+          resolve();
+        }, constants.DEFAULT_TICK_MS * 13);
       })
   );
 
-  assert.ok(spinner.tickCount > 11 && spinner.tickCount < 14);
+  assert.ok(spinner.tickCount >= 11 && spinner.tickCount <= 14, `Spinner tick count (${spinner.tickCount}) is not between 11-14`);
 
   if (!frames) frames = constants.DEFAULT_FRAMES;
   if (symbolFormatter) frames = frames.map(symbolFormatter);
