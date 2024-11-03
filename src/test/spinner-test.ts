@@ -1,11 +1,13 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {Spinner, Symbols} from '..';
-import {createFinishingRenderedLine, createRenderedLine, interceptStdout} from './utils.js';
+import {Spinner, Symbols, renderer} from '..';
+import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, TickMeasuredSpinner} from './utils.js';
 import * as constants from '../constants';
 import process from 'node:process';
 
 async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
+  renderer._reset();
+
   const stdout = await interceptStdout(async () => {
     const spinner = new Spinner(undefined, {
       symbols: customSymbol ? {[method]: customSymbol} : undefined
@@ -14,7 +16,7 @@ async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customS
     spinner[method](type === 'str' ? 'lorem ipsum dolor' : {text: 'lorem ipsum dolor'});
   });
 
-  assert.equal(stdout, createFinishingRenderedLine(customSymbol ?? constants.DEFAULT_SYMBOLS[method], 'lorem ipsum dolor'));
+  assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + createFinishingRenderedLine(customSymbol ?? constants.DEFAULT_SYMBOLS[method], 'lorem ipsum dolor'));
 }
 
 test('end methods', async (t) => {
@@ -49,7 +51,7 @@ test('end methods', async (t) => {
       spinner.stop();
     });
 
-    assert.equal(stdout, constants.CLEAR_LINE + constants.SHOW_CURSOR);
+    assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + constants.CLEAR_LINE + constants.UP_LINE + constants.CLEAR_LINE + constants.SHOW_CURSOR);
   });
 
   await t.test('set display with no symbol', async () => {
@@ -59,7 +61,7 @@ test('end methods', async (t) => {
       spinner.setDisplay({symbol: ''});
     });
 
-    assert.equal(stdout, createFinishingRenderedLine('', ''));
+    assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + createFinishingRenderedLine('', ''));
   });
 
   await t.test('process exit', async () => {
@@ -76,32 +78,36 @@ test('end methods', async (t) => {
 });
 
 async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string) {
+  renderer._reset();
+
+  const spinner = new TickMeasuredSpinner({text, symbolFormatter}, {frames});
+
   const stdout = await interceptStdout(
     () =>
       new Promise((resolve) => {
-        const spinner = new Spinner({text, symbolFormatter}, {frames});
         spinner.start();
-        setTimeout(
-          () => {
-            spinner.stop();
-            resolve();
-          },
-          constants.DEFAULT_TICK_MS * 12 + 5
-        );
+        setTimeout(() => {
+          spinner.stop();
+          resolve();
+        }, constants.DEFAULT_TICK_MS * 13);
       })
   );
+
+  assert.ok(spinner.tickCount >= 11 && spinner.tickCount <= 14, `Spinner tick count (${spinner.tickCount}) is not between 11-14`);
 
   if (!frames) frames = constants.DEFAULT_FRAMES;
   if (symbolFormatter) frames = frames.map(symbolFormatter);
 
   assert.equal(
     stdout,
-    new Array(12)
+    new Array(spinner.tickCount)
       .fill(undefined)
       .map((_, i) => {
-        return createRenderedLine(frames[i % frames.length], text ?? '');
+        return createRenderedLine(frames[i % frames.length], text ?? '', i === 0);
       })
       .join('') +
+      constants.CLEAR_LINE +
+      constants.UP_LINE +
       constants.CLEAR_LINE +
       constants.SHOW_CURSOR
   );
@@ -129,5 +135,48 @@ test('spinner', async (t) => {
     assert.match(stdout, /foo/g);
     assert.match(stdout, /bar/g);
     assert.match(stdout, /baz/g);
+  });
+  await t.test('renders multiple spinners', async () => {
+    const stdout = await interceptStdout(() => {
+      const spinner1 = new Spinner('foo');
+      spinner1.start();
+      const spinner2 = new Spinner('bar');
+      spinner2.start();
+      spinner1.stop();
+      spinner2.stop();
+    });
+
+    assert.equal(
+      stdout,
+      createRenderedLine(constants.DEFAULT_FRAMES[0], 'foo', true) +
+        createRenderedOutput(
+          [
+            {
+              symbol: constants.DEFAULT_FRAMES[0],
+              text: 'foo'
+            },
+            {
+              symbol: constants.DEFAULT_FRAMES[0],
+              text: 'bar'
+            }
+          ],
+          false,
+          1
+        ) +
+        createRenderedOutput(
+          [
+            {
+              symbol: constants.DEFAULT_FRAMES[0],
+              text: 'bar'
+            }
+          ],
+          false,
+          2
+        ) +
+        constants.CLEAR_LINE +
+        constants.UP_LINE +
+        constants.CLEAR_LINE +
+        constants.SHOW_CURSOR
+    );
   });
 });
