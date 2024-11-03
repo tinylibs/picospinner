@@ -91,7 +91,7 @@ test('Renderer', async (t) => {
     }
   });
 
-  await t.test('emits show cursor after finish', async (t) => {
+  await t.test('emits show cursor after finish', async () => {
     const stdout = await interceptStdout(async () => {
       const renderer = new Renderer();
       const component = new TextComponent('');
@@ -101,7 +101,7 @@ test('Renderer', async (t) => {
     assert.ok(stdout.endsWith(constants.SHOW_CURSOR), 'shows cursor');
   });
 
-  await t.test('emits show cursor after component removed', async (t) => {
+  await t.test('emits show cursor after component removed', async () => {
     const stdout = await interceptStdout(async () => {
       const renderer = new Renderer();
       const component = new TextComponent('');

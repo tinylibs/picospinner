@@ -15,8 +15,8 @@ const isMainCallstack = () => getCallstack().some((call) => call.includes('/dist
 
 export function suppressStdout() {
   const stdoutWrite = process.stdout.write;
-  process.stdout.write = (...args: any[]) => {
-    if (!isMainCallstack()) return stdoutWrite.call(process.stdout, args as any);
+  process.stdout.write = (...args: unknown[]) => {
+    if (!isMainCallstack()) return stdoutWrite.call(process.stdout, ...(args as Parameters<typeof stdoutWrite>));
     return true;
   };
 
