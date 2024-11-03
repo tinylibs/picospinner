@@ -1,13 +1,34 @@
 import capcon from 'capture-console';
 import * as constants from '../constants';
 import {isAbsolute} from 'path';
+import {DisplayOptions, Spinner, Symbols} from '..';
 
-export function createRenderedLine(symbol: string, text: string) {
-  return constants.CLEAR_LINE + constants.HIDE_CURSOR + (symbol ? symbol + ' ' : '') + text;
+export function createRenderedOutput(components: {symbol: string; text: string}[], firstLine = false, prevLines = -1) {
+  let out = (!firstLine ? (constants.CLEAR_LINE + constants.UP_LINE).repeat(prevLines === -1 ? components.length : prevLines) : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR;
+  for (const component of components) {
+    out += (component.symbol ? component.symbol + ' ' : '') + component.text + '\n';
+  }
+  return out;
+}
+
+export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false) {
+  return createRenderedOutput([{symbol, text}], firstLine);
 }
 
 export function createFinishingRenderedLine(symbol: string, text: string) {
-  return createRenderedLine(symbol, text) + constants.SHOW_CURSOR + '\n';
+  return createRenderedLine(symbol, text) + constants.SHOW_CURSOR;
+}
+
+const isMainCallstack = () => getCallstack().some((call) => call.includes('/dist/') && !call.includes('/test/') && !call.includes('/node_modules/'));
+
+export function suppressStdout() {
+  const stdoutWrite = process.stdout.write;
+  process.stdout.write = (...args: unknown[]) => {
+    if (!isMainCallstack()) return stdoutWrite.call(process.stdout, ...(args as Parameters<typeof stdoutWrite>));
+    return true;
+  };
+
+  return () => (process.stdout.write = stdoutWrite);
 }
 
 export async function interceptStdout(exec: () => Promise<void> | void) {
@@ -17,7 +38,7 @@ export async function interceptStdout(exec: () => Promise<void> | void) {
   // @ts-expect-error - types are wrong here for the callback
   capcon.startIntercept(process.stdout, (data: string) => {
     // Since stdout is used to communicate test data, the interceptor should write data that is not from picospinner to stdout
-    if (getCallstack().some((call) => call.includes('/dist/') && !call.includes('/test/') && !call.includes('/node_modules/'))) {
+    if (isMainCallstack()) {
       output += data;
     } else stdoutWrite(data);
   });
@@ -59,5 +80,25 @@ function getCallstack() {
 
       return path.replaceAll('\\', '/');
     });
+  }
+}
+
+export class TickMeasuredSpinner extends Spinner {
+  public tickCount = 0;
+
+  constructor(
+    display?: DisplayOptions | string,
+    opts?: {
+      frames?: string[] | undefined;
+      symbols?: Partial<Symbols> | undefined;
+    }
+  ) {
+    super(display, opts);
+
+    const originalTick = this.tick.bind(this);
+    this.tick = () => {
+      this.tickCount++;
+      originalTick();
+    };
   }
 }
