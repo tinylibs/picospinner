@@ -1,7 +1,7 @@
 import capcon from 'capture-console';
-import * as constants from '../constants';
+import * as constants from '../constants.js';
 import {isAbsolute} from 'path';
-import {DisplayOptions, Spinner, Symbols} from '..';
+import {DisplayOptions, Spinner, Symbols} from '../index.js';
 
 export function createRenderedOutput(components: {symbol: string; text: string}[], firstLine = false, prevLines = -1) {
   let out = (!firstLine ? (constants.CLEAR_LINE + constants.UP_LINE).repeat(prevLines === -1 ? components.length : prevLines) : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR;

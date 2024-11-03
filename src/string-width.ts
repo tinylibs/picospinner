@@ -1,6 +1,6 @@
 // A javascript port of wcswidth based on https://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c with modification for emojis and not returning -1 for control characters
 
-import {Intervals, nonSpacing} from './string-chars';
+import {Intervals, nonSpacing} from './string-chars.js';
 
 const EMOJI_REGEX = /(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(?:\u200d(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*/uy;
 const ANSI_REGEX = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/y;

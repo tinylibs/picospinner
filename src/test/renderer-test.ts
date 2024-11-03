@@ -1,8 +1,8 @@
 import {test} from 'node:test';
-import {Renderer, TextComponent} from '../renderer';
+import {Renderer, TextComponent} from '../renderer.js';
 import * as assert from 'node:assert/strict';
-import {interceptStdout, suppressStdout} from './utils';
-import * as constants from '../constants';
+import {interceptStdout, suppressStdout} from './utils.js';
+import * as constants from '../constants.js';
 
 test('TextComponent', async (t) => {
   const component = new TextComponent('lorem ipsum dolor');

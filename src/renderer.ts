@@ -1,5 +1,5 @@
-import * as constants from './constants';
-import {countLines} from './string-lines';
+import * as constants from './constants.js';
+import {countLines} from './string-lines.js';
 
 export class TextComponent {
   onChange?: () => void;

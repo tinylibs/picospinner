@@ -1,4 +1,4 @@
-import {Symbols} from '.';
+import {Symbols} from './index.js';
 
 export const DEFAULT_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 export const DEFAULT_TICK_MS = 50;
