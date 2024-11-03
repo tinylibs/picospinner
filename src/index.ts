@@ -1,5 +1,5 @@
-import * as constants from './constants';
-import {Renderer, TextComponent} from './renderer';
+import * as constants from './constants.js';
+import {Renderer, TextComponent} from './renderer.js';
 
 export type Formatter = (input: string) => string;
 

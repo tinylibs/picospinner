@@ -1,4 +1,4 @@
-import {getStringWidth} from './string-width';
+import {getStringWidth} from './string-width.js';
 
 export function countLines(str: string, maxWidth: number) {
   const lines = str.split('\n');

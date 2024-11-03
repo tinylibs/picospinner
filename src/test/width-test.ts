@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import test from 'node:test';
-import {getStringWidth} from '../string-width';
-import {countLines} from '../string-lines';
+import {getStringWidth} from '../string-width.js';
+import {countLines} from '../string-lines.js';
 
 // Test cases taken from https://github.com/fabiospampinato/fast-string-truncated-width/blob/master/test/index.js
 
