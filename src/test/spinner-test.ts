@@ -73,7 +73,7 @@ test('end methods', async (t) => {
       process.emit('SIGTERM');
     });
 
-    assert.equal(stdout, constants.CLEAR_LINE + constants.SHOW_CURSOR);
+    assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + constants.CLEAR_LINE + constants.UP_LINE + constants.CLEAR_LINE + constants.SHOW_CURSOR);
   });
 });
 
