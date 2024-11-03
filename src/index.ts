@@ -1,5 +1,6 @@
 import * as constants from './constants';
 import {countLines} from './string-lines';
+import process from 'node:process';
 
 export type Formatter = (input: string) => string;
 
@@ -49,6 +50,7 @@ export class Spinner {
     if (process.stdout.getWindowSize) this.terminalWidth = process.stdout.getWindowSize()[0];
     this.currentSymbol = this.frames[0];
     this.framesLineCountCache.fill(-1);
+    this.addListeners();
   }
 
   tick() {
@@ -62,6 +64,22 @@ export class Spinner {
       process.stdout.write(constants.CLEAR_LINE + constants.UP_LINE);
     }
     process.stdout.write(constants.CLEAR_LINE);
+  }
+
+  private onProcessExit = () => {
+    if (this.running) {
+      this.stop();
+    }
+  };
+
+  private addListeners() {
+    process.once('SIGTERM', this.onProcessExit);
+    process.once('SIGINT', this.onProcessExit);
+  }
+
+  private clearListeners() {
+    process.off('SIGTERM', this.onProcessExit);
+    process.off('SIGINT', this.onProcessExit);
   }
 
   private getLineCount(output: string) {
@@ -128,6 +146,7 @@ export class Spinner {
   stop() {
     this.clearMultiLineOutput();
     this.end(false);
+    this.clearListeners();
   }
 
   private end(newLine = true) {

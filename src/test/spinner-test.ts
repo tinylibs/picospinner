@@ -3,6 +3,7 @@ import {test} from 'node:test';
 import {Spinner, Symbols} from '..';
 import {createFinishingRenderedLine, createRenderedLine, interceptStdout} from './utils.js';
 import * as constants from '../constants';
+import process from 'node:process';
 
 async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
   const stdout = await interceptStdout(async () => {
@@ -59,6 +60,18 @@ test('end methods', async (t) => {
     });
 
     assert.equal(stdout, createFinishingRenderedLine('', ''));
+  });
+
+  await t.test('process exit', async () => {
+    const stdout = await interceptStdout(async () => {
+      const spinner = new Spinner();
+      spinner.start();
+      // TODO (43081j): maybe this'll spook other things? if something is
+      // listening for SIGTERM
+      process.emit('SIGTERM');
+    });
+
+    assert.equal(stdout, constants.CLEAR_LINE + constants.SHOW_CURSOR);
   });
 });
 
