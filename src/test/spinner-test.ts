@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {Spinner, Symbols, renderer} from '..';
-import {createFinishingRenderedLine, createRenderedLine, interceptStdout, TickMeasuredSpinner} from './utils.js';
+import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, TickMeasuredSpinner} from './utils.js';
 import * as constants from '../constants';
 
 async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
@@ -122,5 +122,48 @@ test('spinner', async (t) => {
     assert.match(stdout, /foo/g);
     assert.match(stdout, /bar/g);
     assert.match(stdout, /baz/g);
+  });
+  await t.test('renders multiple spinners', async () => {
+    const stdout = await interceptStdout(() => {
+      const spinner1 = new Spinner('foo');
+      spinner1.start();
+      const spinner2 = new Spinner('bar');
+      spinner2.start();
+      spinner1.stop();
+      spinner2.stop();
+    });
+
+    assert.equal(
+      stdout,
+      createRenderedLine(constants.DEFAULT_FRAMES[0], 'foo', true) +
+        createRenderedOutput(
+          [
+            {
+              symbol: constants.DEFAULT_FRAMES[0],
+              text: 'foo'
+            },
+            {
+              symbol: constants.DEFAULT_FRAMES[0],
+              text: 'bar'
+            }
+          ],
+          false,
+          1
+        ) +
+        createRenderedOutput(
+          [
+            {
+              symbol: constants.DEFAULT_FRAMES[0],
+              text: 'bar'
+            }
+          ],
+          false,
+          2
+        ) +
+        constants.CLEAR_LINE +
+        constants.UP_LINE +
+        constants.CLEAR_LINE +
+        constants.SHOW_CURSOR
+    );
   });
 });

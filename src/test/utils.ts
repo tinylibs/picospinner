@@ -3,8 +3,16 @@ import * as constants from '../constants';
 import {isAbsolute} from 'path';
 import {DisplayOptions, Spinner, Symbols} from '..';
 
+export function createRenderedOutput(components: {symbol: string; text: string}[], firstLine = false, prevLines = -1) {
+  let out = (!firstLine ? (constants.CLEAR_LINE + constants.UP_LINE).repeat(prevLines === -1 ? components.length : prevLines) : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR;
+  for (const component of components) {
+    out += (component.symbol ? component.symbol + ' ' : '') + component.text + '\n';
+  }
+  return out;
+}
+
 export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false) {
-  return (!firstLine ? constants.CLEAR_LINE + constants.UP_LINE : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR + (symbol ? symbol + ' ' : '') + text + '\n';
+  return createRenderedOutput([{symbol, text}], firstLine);
 }
 
 export function createFinishingRenderedLine(symbol: string, text: string) {
