@@ -83,8 +83,6 @@ test('end methods', async (t) => {
 
       assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + constants.CLEAR_LINE + constants.UP_LINE + constants.CLEAR_LINE + constants.SHOW_CURSOR);
       assert.equal(exitCode, 128 + 15);
-    } catch (err) {
-      throw err;
     } finally {
       process.exit = originalExit;
     }
@@ -108,8 +106,6 @@ test('end methods', async (t) => {
       });
 
       assert.equal(exitCode, 1);
-    } catch (err) {
-      throw err;
     } finally {
       process.exit = originalExit;
     }
