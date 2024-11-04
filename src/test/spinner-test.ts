@@ -65,15 +65,27 @@ test('end methods', async (t) => {
   });
 
   await t.test('process exit', async () => {
-    const stdout = await interceptStdout(async () => {
-      const spinner = new Spinner();
-      spinner.start();
-      // TODO (43081j): maybe this'll spook other things? if something is
-      // listening for SIGTERM
-      process.emit('SIGTERM');
-    });
+    let exitCode: unknown = 0;
+    const exitStub = ((code: unknown) => {
+      exitCode = code;
+    }) as typeof process.exit;
+    const originalExit = process.exit;
+    process.exit = exitStub;
 
-    assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + constants.CLEAR_LINE + constants.UP_LINE + constants.CLEAR_LINE + constants.SHOW_CURSOR);
+    try {
+      const stdout = await interceptStdout(async () => {
+        const spinner = new Spinner();
+        spinner.start();
+        // TODO (43081j): maybe this'll spook other things? if something is
+        // listening for SIGTERM
+        process.emit('SIGTERM', 'SIGTERM');
+      });
+
+      assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + constants.CLEAR_LINE + constants.UP_LINE + constants.CLEAR_LINE + constants.SHOW_CURSOR);
+      assert.equal(exitCode, 128 + 15);
+    } finally {
+      process.exit = originalExit;
+    }
   });
 });
 

@@ -61,9 +61,12 @@ export class Spinner {
     this.refresh();
   }
 
-  private onProcessExit = () => {
+  private onProcessExit = (signalName: string) => {
     if (this.running) {
       this.stop();
+      // SIGTERM is 15, SIGINT is 2
+      const signalCode = signalName === 'SIGTERM' ? 15 : 2;
+      process.exit(128 + signalCode);
     }
   };
 
@@ -126,11 +129,11 @@ export class Spinner {
 
   stop() {
     this.end(false);
-    this.clearListeners();
   }
 
   private end(keepComponent = true) {
     clearInterval(this.interval);
+    this.clearListeners();
     if (keepComponent) this.component.finish();
     else renderer.removeComponent(this.component);
     this.running = false;
