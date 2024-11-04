@@ -87,6 +87,29 @@ test('end methods', async (t) => {
       process.exit = originalExit;
     }
   });
+
+  await t.test('process exit (via exit event)', async () => {
+    let exitCode: unknown = 0;
+    const exitStub = ((code: unknown) => {
+      exitCode = code;
+    }) as typeof process.exit;
+    const originalExit = process.exit;
+    process.exit = exitStub;
+
+    try {
+      await interceptStdout(async () => {
+        const spinner = new Spinner();
+        spinner.start();
+        // TODO (43081j): maybe this'll spook other things? if something is
+        // listening for SIGTERM
+        process.emit('exit', 1);
+      });
+
+      assert.equal(exitCode, 1);
+    } finally {
+      process.exit = originalExit;
+    }
+  });
 });
 
 async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string) {

@@ -61,23 +61,32 @@ export class Spinner {
     this.refresh();
   }
 
-  private onProcessExit = (signalName: string) => {
+  private onProcessExit = (signal?: string | number) => {
     if (this.running) {
       this.stop();
       // SIGTERM is 15, SIGINT is 2
-      const signalCode = signalName === 'SIGTERM' ? 15 : 2;
-      process.exit(128 + signalCode);
+      let signalCode;
+      if (signal === 'SIGTERM') {
+        signalCode = 15 + 128;
+      } else if (signal === 'SIGINT') {
+        signalCode = 2 + 128;
+      } else {
+        signalCode = Number(signal);
+      }
+      process.exit(signalCode);
     }
   };
 
   private addListeners() {
     process.once('SIGTERM', this.onProcessExit);
     process.once('SIGINT', this.onProcessExit);
+    process.once('exit', this.onProcessExit);
   }
 
   private clearListeners() {
     process.off('SIGTERM', this.onProcessExit);
     process.off('SIGINT', this.onProcessExit);
+    process.off('exit', this.onProcessExit);
   }
 
   refresh() {
