@@ -2,6 +2,7 @@ import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {Spinner, Symbols, renderer} from '../index.js';
 import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, TickMeasuredSpinner} from './utils.js';
+import process from 'node:process';
 import * as constants from '../constants.js';
 
 async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
@@ -61,6 +62,53 @@ test('end methods', async (t) => {
     });
 
     assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + createFinishingRenderedLine('', ''));
+  });
+
+  await t.test('process exit', async () => {
+    let exitCode: unknown = 0;
+    const exitStub = ((code: unknown) => {
+      exitCode = code;
+    }) as typeof process.exit;
+    const originalExit = process.exit;
+    process.exit = exitStub;
+
+    try {
+      const stdout = await interceptStdout(async () => {
+        const spinner = new Spinner();
+        spinner.start();
+        // TODO (43081j): maybe this'll spook other things? if something is
+        // listening for SIGTERM
+        process.emit('SIGTERM', 'SIGTERM');
+      });
+
+      assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + constants.CLEAR_LINE + constants.UP_LINE + constants.CLEAR_LINE + constants.SHOW_CURSOR);
+      assert.equal(exitCode, 128 + 15);
+    } finally {
+      process.exit = originalExit;
+    }
+  });
+
+  await t.test('process exit (via exit event)', async () => {
+    let exitCode: unknown = 0;
+    const exitStub = ((code: unknown) => {
+      exitCode = code;
+    }) as typeof process.exit;
+    const originalExit = process.exit;
+    process.exit = exitStub;
+
+    try {
+      await interceptStdout(async () => {
+        const spinner = new Spinner();
+        spinner.start();
+        // TODO (43081j): maybe this'll spook other things? if something is
+        // listening for SIGTERM
+        process.emit('exit', 1);
+      });
+
+      assert.equal(exitCode, 1);
+    } finally {
+      process.exit = originalExit;
+    }
   });
 });
 

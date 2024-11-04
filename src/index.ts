@@ -52,12 +52,41 @@ export class Spinner {
 
     this.tick();
     renderer.addComponent(this.component);
+    this.addListeners();
   }
 
   tick() {
     this.currentSymbol = this.frames[this.frameIndex++];
     if (this.frameIndex === this.frames.length) this.frameIndex = 0;
     this.refresh();
+  }
+
+  private onProcessExit = (signal?: string | number) => {
+    if (this.running) {
+      this.stop();
+      // SIGTERM is 15, SIGINT is 2
+      let signalCode;
+      if (signal === 'SIGTERM') {
+        signalCode = 15 + 128;
+      } else if (signal === 'SIGINT') {
+        signalCode = 2 + 128;
+      } else {
+        signalCode = Number(signal);
+      }
+      process.exit(signalCode);
+    }
+  };
+
+  private addListeners() {
+    process.once('SIGTERM', this.onProcessExit);
+    process.once('SIGINT', this.onProcessExit);
+    process.once('exit', this.onProcessExit);
+  }
+
+  private clearListeners() {
+    process.off('SIGTERM', this.onProcessExit);
+    process.off('SIGINT', this.onProcessExit);
+    process.off('exit', this.onProcessExit);
   }
 
   refresh() {
@@ -113,6 +142,7 @@ export class Spinner {
 
   private end(keepComponent = true) {
     clearInterval(this.interval);
+    this.clearListeners();
     if (keepComponent) this.component.finish();
     else renderer.removeComponent(this.component);
     this.running = false;
