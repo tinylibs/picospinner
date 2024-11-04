@@ -1,9 +1,9 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {Spinner, Symbols, renderer} from '..';
+import {Spinner, Symbols, renderer} from '../index.js';
 import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, TickMeasuredSpinner} from './utils.js';
-import * as constants from '../constants';
 import process from 'node:process';
+import * as constants from '../constants.js';
 
 async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
   renderer._reset();
