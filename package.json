@@ -10,7 +10,7 @@
   "author": "PondWader",
   "description": "A lightweight, no dependency, pluggable CLI spinner library.",
   "scripts": {
-    "build": "tsup ./src/index.ts --format cjs,esm --dts --minify",
+    "build": "tsup ./src/index.ts --format cjs,esm --dts",
     "format": "prettier --write src",
     "test": "tsc && c8 --exclude-after-remap node --test",
     "lint": "npm run lint:format && eslint src",

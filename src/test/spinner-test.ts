@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {Spinner, Symbols, renderer} from '../index.js';
-import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, TickMeasuredSpinner} from './utils.js';
+import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, suppressStdout, TickMeasuredSpinner} from './utils.js';
 import process from 'node:process';
 import * as constants from '../constants.js';
 
@@ -108,6 +108,25 @@ test('end methods', async (t) => {
       assert.equal(exitCode, 1);
     } finally {
       process.exit = originalExit;
+    }
+  });
+
+  await t.test('restart finished spinner with new component', async () => {
+    const unsuppressStdout = suppressStdout();
+
+    const spinner = new Spinner();
+    try {
+      spinner.start();
+      spinner.succeed();
+      assert.ok(spinner['component'].finished, 'component is finished');
+      spinner.start();
+      assert.ok(!spinner['component'].finished, 'component is not finished');
+      spinner.stop();
+    } catch (err) {
+      spinner.stop();
+      throw err;
+    } finally {
+      unsuppressStdout();
     }
   });
 });

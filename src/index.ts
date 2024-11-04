@@ -45,6 +45,7 @@ export class Spinner {
 
   start(tickMs = constants.DEFAULT_TICK_MS) {
     if (this.running) throw new Error('Spinner is already running.');
+    if (this.component.finished) this.component.finished = false;
 
     this.interval = setInterval(this.tick.bind(this), tickMs);
     this.running = true;
@@ -62,19 +63,17 @@ export class Spinner {
   }
 
   private onProcessExit = (signal?: string | number) => {
-    if (this.running) {
-      this.stop();
-      // SIGTERM is 15, SIGINT is 2
-      let signalCode;
-      if (signal === 'SIGTERM') {
-        signalCode = 15 + 128;
-      } else if (signal === 'SIGINT') {
-        signalCode = 2 + 128;
-      } else {
-        signalCode = Number(signal);
-      }
-      process.exit(signalCode);
+    this.stop();
+    // SIGTERM is 15, SIGINT is 2
+    let signalCode;
+    if (signal === 'SIGTERM') {
+      signalCode = 15 + 128;
+    } else if (signal === 'SIGINT') {
+      signalCode = 2 + 128;
+    } else {
+      signalCode = Number(signal);
     }
+    process.exit(signalCode);
   };
 
   private addListeners() {
@@ -111,7 +110,6 @@ export class Spinner {
   setText(text: string, render = true) {
     this.text = text;
     if (this.running) {
-      // Clear width cache
       if (render) this.refresh();
     }
   }
