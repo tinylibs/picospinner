@@ -86,6 +86,8 @@ test('Renderer', async (t) => {
       assert.equal(renderer['components'].length, 2);
       component2.finish();
       assert.equal(renderer['components'].length, 0);
+    } catch (err) {
+      throw err;
     } finally {
       revertStdoutSuppression();
     }
