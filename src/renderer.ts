@@ -86,10 +86,13 @@ export class Renderer {
   }
 
   clear() {
+    process.stdout.cursorTo(0);
     for (let i = 0; i < this.lastLinesAmt - 1; i++) {
-      process.stdout.write(constants.CLEAR_LINE + constants.UP_LINE);
+      process.stdout.moveCursor(0, -1);
+      if (i > 0) {
+        process.stdout.clearLine(1);
+      }
     }
-    process.stdout.write(constants.CLEAR_LINE);
   }
 
   _reset() {
