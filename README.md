@@ -17,7 +17,7 @@ npm i picospinner
 ```js
 import {Spinner} from 'picospinner';
 
-const spinner = new Spinner('Loading...');
+const spinner = new Spinner('Loading...', {colors: true});
 spinner.start();
 setTimeout(() => {
   spinner.succeed('Finished.');
@@ -32,7 +32,8 @@ import {Spinner} from 'picospinner';
 const spinner = new Spinner('Loading...', {
   symbols: {
     warn: '⚠'
-  }
+  },
+  colors: true
 });
 spinner.start();
 setTimeout(() => {
@@ -60,7 +61,28 @@ Calling `spinner.stop();` will stop the spinner and remove it.
 
 ### Colours
 
-Colours can be achieved by using a formatter such as picocolors or chalk. First install picocolors:
+As of version **2.1.0** colours can be easily applied with the `colors` option which uses the [`styleText`](https://nodejs.org/api/util.html#utilstyletextformat-text-options) function from [`node:util`](https://nodejs.org/api/util.html) if it is available (Node versions greater than **22.0.0**, **21.7.0** or **20.12.0**). If it's not available, no colours will be displayed.
+
+The option accepts a boolean value controlling whether or not to display the default colours or it can be passed an object defining styles for each component type as shown below:
+
+```js
+// Create spinner with default colours
+const spinner = new Spinner('Loading...', {
+  colors: true
+});
+
+// Create spinner with custom colours
+const spinner = new Spinner('Loading...', {
+  colors: {
+    text: 'gray',
+    succeed: ['bold', 'green'],
+    spinner: 'magenta'
+    // The other properties will use the default colours
+  }
+});
+```
+
+Alternatively, colours can be displayed by using a third-party formatter such as picocolors or chalk. First install picocolors:
 
 ```
 npm i picocolors
