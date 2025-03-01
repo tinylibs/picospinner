@@ -1,22 +1,23 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {Spinner, Symbols, renderer} from '../index.js';
+import {ColorOptions, Spinner, Symbols, renderer} from '../index.js';
 import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, suppressStdout, TickMeasuredSpinner} from './utils.js';
 import process from 'node:process';
 import * as constants from '../constants.js';
 
-async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
+async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string, colors?: boolean | ColorOptions) {
   renderer._reset();
 
   const stdout = await interceptStdout(async () => {
     const spinner = new Spinner(undefined, {
-      symbols: customSymbol ? {[method]: customSymbol} : undefined
+      symbols: customSymbol ? {[method]: customSymbol} : undefined,
+      colors
     });
     spinner.start();
     spinner[method](type === 'str' ? 'lorem ipsum dolor' : {text: 'lorem ipsum dolor'});
   });
 
-  assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + createFinishingRenderedLine(customSymbol ?? constants.DEFAULT_SYMBOLS[method], 'lorem ipsum dolor'));
+  assert.equal(stdout, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true, colors, 'spinner') + createFinishingRenderedLine(customSymbol ?? constants.DEFAULT_SYMBOLS[method], 'lorem ipsum dolor', colors, method));
 }
 
 test('end methods', async (t) => {
@@ -24,24 +25,32 @@ test('end methods', async (t) => {
     await testEndMethod('info', 'str');
     await testEndMethod('info', 'obj');
     await testEndMethod('info', 'obj', 'I');
+    await testEndMethod('info', 'obj', 'I', true);
+    await testEndMethod('info', 'obj', 'I', {info: 'bgBlack'});
   });
 
   await t.test('.succeed', async () => {
     await testEndMethod('succeed', 'str');
     await testEndMethod('succeed', 'obj');
     await testEndMethod('succeed', 'obj', 'Success');
+    await testEndMethod('succeed', 'obj', 'Success', true);
+    await testEndMethod('succeed', 'obj', 'Success', {succeed: ['cyan', 'bold'], text: 'red'});
   });
 
   await t.test('.warn', async () => {
     await testEndMethod('warn', 'str');
     await testEndMethod('warn', 'obj');
     await testEndMethod('warn', 'obj', '⚠');
+    await testEndMethod('warn', 'obj', '⚠', true);
+    await testEndMethod('warn', 'obj', '⚠', {warn: 'overlined'});
   });
 
   await t.test('.fail', async () => {
     await testEndMethod('fail', 'str');
     await testEndMethod('fail', 'obj');
-    await testEndMethod('fail', 'obj', ':(');
+    await testEndMethod('fail', 'obj', ':(', false);
+    await testEndMethod('fail', 'obj', ':(', true);
+    await testEndMethod('fail', 'obj', ':(', {fail: 'redBright'});
   });
 
   await t.test('.stop', async () => {
@@ -131,10 +140,10 @@ test('end methods', async (t) => {
   });
 });
 
-async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string) {
+async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string, colors?: ColorOptions | boolean) {
   renderer._reset();
 
-  const spinner = new TickMeasuredSpinner({text, symbolFormatter}, {frames});
+  const spinner = new TickMeasuredSpinner({text, symbolFormatter}, {frames, colors});
 
   const stdout = await interceptStdout(
     () =>
@@ -150,14 +159,13 @@ async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (
   assert.ok(spinner.tickCount >= 11 && spinner.tickCount <= 14, `Spinner tick count (${spinner.tickCount}) is not between 11-14`);
 
   if (!frames) frames = constants.DEFAULT_FRAMES;
-  if (symbolFormatter) frames = frames.map(symbolFormatter);
 
   assert.equal(
     stdout,
     new Array(spinner.tickCount)
       .fill(undefined)
       .map((_, i) => {
-        return createRenderedLine(frames[i % frames.length], text ?? '', i === 0);
+        return createRenderedLine(frames[i % frames.length], text ?? '', i === 0, colors, 'spinner', symbolFormatter);
       })
       .join('') +
       constants.CLEAR_LINE +
@@ -233,4 +241,16 @@ test('spinner', async (t) => {
         constants.SHOW_CURSOR
     );
   });
+  await t.test('displays colors', () => testSpinner(undefined, 'lorem ipsum dolor', undefined, true));
+  await t.test('displays custom colors', () =>
+    testSpinner(undefined, 'lorem ipsum dolor', undefined, {
+      succeed: 'magenta',
+      warn: 'bgMagenta',
+      fail: 'greenBright',
+      info: 'inverse',
+      spinner: 'overlined',
+      text: 'grey'
+    })
+  );
+  await t.test('displays colors with symbol formatter', () => testSpinner(undefined, 'lorem ipsum dolor', (s) => `a${s}a`, true));
 });

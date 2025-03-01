@@ -35,14 +35,6 @@ export type Symbols = {
   info: string;
 };
 
-const defaultColours: ColorOptions = {
-  succeed: 'green',
-  fail: 'red',
-  warn: 'yellow',
-  info: 'blue',
-  spinner: 'cyan'
-};
-
 // Global renderer so that multiple spinners can run at the same time
 export const renderer = new Renderer();
 
@@ -64,10 +56,10 @@ export class Spinner {
     this.symbols = {...constants.DEFAULT_SYMBOLS, ...symbols};
 
     // Setup colors if the option is passed
-    if (colors === true) this.colors = defaultColours;
+    if (colors === true) this.colors = constants.DEFAULT_COLORS;
     else if (typeof colors === 'object') {
       this.colors = {
-        ...defaultColours,
+        ...constants.DEFAULT_COLORS,
         ...colors
       };
     }
@@ -139,7 +131,7 @@ export class Spinner {
         this.currentSymbol = this.format(displayOpts.symbol, displayOpts.symbolType);
       } else this.currentSymbol = displayOpts.symbol;
     }
-    if (typeof displayOpts.text === 'string') this.setText(this.format(displayOpts.text, 'text'), false);
+    if (typeof displayOpts.text === 'string') this.setText(displayOpts.text, false);
     if (displayOpts.symbolFormatter) this.symbolFormatter = displayOpts.symbolFormatter;
 
     if (render) this.refresh();
