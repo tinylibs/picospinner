@@ -2,14 +2,14 @@ import capcon from 'capture-console';
 import * as constants from '../constants.js';
 import {isAbsolute} from 'path';
 import {ColorOptions, DisplayOptions, Spinner, SpinnerOptions} from '../index.js';
-import {styleText} from 'util';
+import * as util from 'node:util';
 
 export function createRenderedOutput(components: {symbol: string; symbolType?: keyof ColorOptions; text: string}[], firstLine = false, prevLines = -1, colors?: ColorOptions | boolean, symbolFormatter?: (v: string) => string) {
   if (colors === true) colors = constants.DEFAULT_COLORS;
   else if (colors) colors = {...constants.DEFAULT_COLORS, ...colors};
 
   const format = (text: string, componentType: keyof ColorOptions) => {
-    if (colors && colors[componentType]) text = styleText(colors[componentType], text);
+    if (colors && colors[componentType] && util.styleText) text = util.styleText(colors[componentType], text);
     if (symbolFormatter && componentType !== 'text') return symbolFormatter(text);
     return text;
   };
