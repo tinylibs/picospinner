@@ -77,7 +77,7 @@ const spinner = new Spinner('Loading...', {
     text: 'gray',
     succeed: ['bold', 'green'],
     spinner: 'magenta'
-    // The other properties will use the default colours
+    // The other properties (fail, warn, info) will use the default colours since they're not specified in this example
   }
 });
 ```
