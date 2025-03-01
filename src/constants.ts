@@ -1,4 +1,4 @@
-import {Symbols} from './index.js';
+import {ColorOptions, Symbols} from './index.js';
 
 export const DEFAULT_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 export const DEFAULT_TICK_MS = 50;
@@ -11,4 +11,11 @@ export const DEFAULT_SYMBOLS: Symbols = {
   fail: '✖',
   warn: '!',
   info: 'ℹ'
+};
+export const DEFAULT_COLORS: ColorOptions = {
+  succeed: 'green',
+  fail: 'red',
+  warn: 'yellow',
+  info: 'blue',
+  spinner: 'cyan'
 };

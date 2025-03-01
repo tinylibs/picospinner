@@ -1,5 +1,6 @@
 import * as constants from './constants.js';
 import {Renderer, TextComponent} from './renderer.js';
+import * as util from 'node:util';
 
 export type Formatter = (input: string) => string;
 
@@ -7,6 +8,24 @@ export type DisplayOptions = {
   symbolFormatter?: Formatter;
   text?: string;
   symbol?: string;
+  symbolType?: 'succeed' | 'fail' | 'warn' | 'info' | 'spinner';
+};
+
+export type SpinnerOptions = {
+  colors?: boolean | ColorOptions;
+  frames?: string[];
+  symbols?: Partial<Symbols>;
+};
+
+type Style = Parameters<typeof util.styleText>[0];
+
+export type ColorOptions = {
+  succeed?: Style;
+  fail?: Style;
+  warn?: Style;
+  info?: Style;
+  spinner?: Style;
+  text?: Style;
 };
 
 export type Symbols = {
@@ -30,10 +49,20 @@ export class Spinner {
   private symbols: Symbols;
   private frames: string[];
   private component = new TextComponent('');
+  private colors?: ColorOptions;
 
-  constructor(display: DisplayOptions | string = '', {frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>} = {}) {
+  constructor(display: DisplayOptions | string = '', {colors, frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>}: SpinnerOptions = {}) {
     // Merge symbols with defaults
     this.symbols = {...constants.DEFAULT_SYMBOLS, ...symbols};
+
+    // Setup colors if the option is passed
+    if (colors === true) this.colors = constants.DEFAULT_COLORS;
+    else if (typeof colors === 'object') {
+      this.colors = {
+        ...constants.DEFAULT_COLORS,
+        ...colors
+      };
+    }
 
     if (typeof display === 'string') display = {text: display};
     delete display.symbol;
@@ -57,7 +86,7 @@ export class Spinner {
   }
 
   tick() {
-    this.currentSymbol = this.frames[this.frameIndex++];
+    this.currentSymbol = this.format(this.frames[this.frameIndex++], 'spinner');
     if (this.frameIndex === this.frames.length) this.frameIndex = 0;
     this.refresh();
   }
@@ -98,7 +127,9 @@ export class Spinner {
 
   setDisplay(displayOpts: DisplayOptions = {}, render = true) {
     if (typeof displayOpts.symbol === 'string') {
-      this.currentSymbol = displayOpts.symbol;
+      if (typeof displayOpts.symbolType === 'string') {
+        this.currentSymbol = this.format(displayOpts.symbol, displayOpts.symbolType);
+      } else this.currentSymbol = displayOpts.symbol;
     }
     if (typeof displayOpts.text === 'string') this.setText(displayOpts.text, false);
     if (displayOpts.symbolFormatter) this.symbolFormatter = displayOpts.symbolFormatter;
@@ -108,30 +139,30 @@ export class Spinner {
   }
 
   setText(text: string, render = true) {
-    this.text = text;
+    this.text = this.format(text, 'text');
     if (this.running) {
       if (render) this.refresh();
     }
   }
 
   succeed(display?: DisplayOptions | string) {
-    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.succeed});
-    else this.setDisplay({...display, symbol: this.symbols.succeed});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.succeed, symbolType: 'succeed'});
+    else this.setDisplay({...display, symbol: this.symbols.succeed, symbolType: 'succeed'});
   }
 
   fail(display?: DisplayOptions | string) {
-    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.fail});
-    else this.setDisplay({...display, symbol: this.symbols.fail});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.fail, symbolType: 'fail'});
+    else this.setDisplay({...display, symbol: this.symbols.fail, symbolType: 'fail'});
   }
 
   warn(display?: DisplayOptions | string) {
-    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.warn});
-    else this.setDisplay({...display, symbol: this.symbols.warn});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.warn, symbolType: 'warn'});
+    else this.setDisplay({...display, symbol: this.symbols.warn, symbolType: 'warn'});
   }
 
   info(display?: DisplayOptions | string) {
-    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.info});
-    else this.setDisplay({...display, symbol: this.symbols.info});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.info, symbolType: 'info'});
+    else this.setDisplay({...display, symbol: this.symbols.info, symbolType: 'info'});
   }
 
   stop() {
@@ -144,5 +175,16 @@ export class Spinner {
     if (keepComponent) this.component.finish();
     else renderer.removeComponent(this.component);
     this.running = false;
+  }
+
+  private format(component: string, componentName: keyof ColorOptions): string {
+    if (this.colors === undefined) return component;
+
+    const color = this.colors[componentName];
+    // Ensure that the Node version contains util.styleText
+    if (color && util.styleText !== undefined) {
+      return util.styleText(color, component);
+    }
+    return component;
   }
 }
