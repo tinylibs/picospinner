@@ -3,8 +3,9 @@
   "version": "2.0.0",
   "type": "module",
   "exports": {
-    "import": "./dist/index.js",
-    "require": "./dist/index.cjs"
+    ".": {
+      "default": "./dist/index.js"
+    }
   },
   "engines": {
     "node": ">=18.0.0"
@@ -13,18 +14,16 @@
   "author": "PondWader",
   "description": "A lightweight, no dependency, pluggable CLI spinner library.",
   "scripts": {
-    "build": "tsup ./src/index.ts --format cjs,esm --dts",
+    "build": "tsc",
     "format": "prettier --write src",
-    "test": "tsc && c8 --exclude-after-remap node --test",
+    "test": "npm run build && c8 --exclude-after-remap node --test",
     "lint": "npm run lint:format && eslint src",
     "lint:format": "prettier --check src",
     "bench": "tsc && node ./bench/string-width.mjs"
   },
   "files": [
-    "./dist/index.js",
-    "./dist/index.cjs",
-    "./dist/index.d.ts",
-    "./dist/index.d.cts"
+    "./dist",
+    "!./dist/test"
   ],
   "keywords": [
     "spinner",
@@ -48,7 +47,6 @@
     "prettier": "^3.3.2",
     "string-width": "^7.2.0",
     "tinybench": "^2.8.0",
-    "tsup": "^8.3.5",
     "typescript": "^5.5.2",
     "typescript-eslint": "^7.14.1"
   }
