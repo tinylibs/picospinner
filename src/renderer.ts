@@ -36,6 +36,7 @@ export class Renderer {
   private lastLinesAmt = 0;
   private terminalWidth = Infinity;
   private finishedComponents = 0;
+  private outputBuffer = '';
 
   constructor(public hideCursor: boolean = true) {}
 
@@ -64,15 +65,17 @@ export class Renderer {
   }
 
   render() {
+    this.outputBuffer = '';
     this.clear();
 
     if (this.components.length === 0) {
+      process.stdout.write(this.outputBuffer);
       if (this.hideCursor) process.stdout.write(constants.SHOW_CURSOR);
       this.lastLinesAmt = 0;
       return;
     }
 
-    if (this.hideCursor) process.stdout.write(constants.HIDE_CURSOR);
+    if (this.hideCursor) this.outputBuffer += constants.HIDE_CURSOR;
 
     let output = '';
     let finished = true;
@@ -83,19 +86,21 @@ export class Renderer {
     }
 
     this.lastLinesAmt = countLines(output, this.terminalWidth);
-    process.stdout.write(output);
+    this.outputBuffer += output;
 
     if (finished) {
       this._reset();
-      process.stdout.write(constants.SHOW_CURSOR);
+      this.outputBuffer += constants.SHOW_CURSOR;
     }
+
+    process.stdout.write(this.outputBuffer);
   }
 
   clear() {
     for (let i = 0; i < this.lastLinesAmt - 1; i++) {
-      process.stdout.write(constants.CLEAR_LINE + constants.UP_LINE);
+      this.outputBuffer += constants.CLEAR_LINE + constants.UP_LINE;
     }
-    process.stdout.write(constants.CLEAR_LINE);
+    this.outputBuffer += constants.CLEAR_LINE;
   }
 
   _reset() {
