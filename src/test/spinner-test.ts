@@ -140,10 +140,10 @@ test('end methods', async (t) => {
   });
 });
 
-async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string, colors?: ColorOptions | boolean) {
+async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string, colors?: ColorOptions | boolean, disableNewLineEnding?: boolean) {
   renderer._reset();
 
-  const spinner = new TickMeasuredSpinner({text, symbolFormatter}, {frames, colors});
+  const spinner = new TickMeasuredSpinner({text, symbolFormatter}, {frames, colors, disableNewLineEnding});
 
   const stdout = await interceptStdout(
     () =>
@@ -165,11 +165,10 @@ async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (
     new Array(spinner.tickCount)
       .fill(undefined)
       .map((_, i) => {
-        return createRenderedLine(frames[i % frames.length], text ?? '', i === 0, colors, 'spinner', symbolFormatter);
+        return createRenderedLine(frames[i % frames.length], text ?? '', i === 0, colors, 'spinner', symbolFormatter, disableNewLineEnding);
       })
       .join('') +
-      constants.CLEAR_LINE +
-      constants.UP_LINE +
+      (!disableNewLineEnding ? constants.CLEAR_LINE + constants.UP_LINE : '') +
       constants.CLEAR_LINE +
       constants.SHOW_CURSOR
   );
@@ -253,4 +252,5 @@ test('spinner', async (t) => {
     })
   );
   await t.test('displays colors with symbol formatter', () => testSpinner(undefined, 'lorem ipsum dolor', (s) => `a${s}a`, true));
+  await t.test('disableNewLineEnding prevents ending new line', () => testSpinner(undefined, undefined, undefined, undefined, true));
 });

@@ -5,6 +5,7 @@ export class TextComponent {
   onChange?: () => void;
   onFinish?: () => void;
   finished = false;
+  newLineEnding = true;
 
   constructor(public text: string) {}
 
@@ -23,6 +24,10 @@ export class TextComponent {
 
   output() {
     return this.text;
+  }
+
+  disableNewLineEnding() {
+    this.newLineEnding = false;
   }
 }
 
@@ -71,8 +76,9 @@ export class Renderer {
 
     let output = '';
     let finished = true;
-    for (const component of this.components) {
-      output += component.output() + '\n';
+    for (let i = 0; i < this.components.length; i++) {
+      const component = this.components[i];
+      output += component.output() + (i !== this.components.length - 1 || component.newLineEnding ? '\n' : '');
       if (!component.finished) finished = false;
     }
 

@@ -110,4 +110,18 @@ test('Renderer', async (t) => {
     });
     assert.ok(stdout.endsWith(constants.SHOW_CURSOR), 'shows cursor');
   });
+
+  await t.test('newLineEnding behaves as expected', async () => {
+    const stdout = await interceptStdout(async () => {
+      const renderer = new Renderer();
+      const component1 = new TextComponent('hello');
+      component1.disableNewLineEnding();
+      const component2 = new TextComponent('hi');
+      component2.disableNewLineEnding();
+      renderer.addComponent(component1);
+      renderer.addComponent(component2);
+    });
+
+    assert.ok(stdout.endsWith('hello\nhi'), 'new lines are placed correctly');
+  });
 });

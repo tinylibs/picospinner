@@ -15,6 +15,7 @@ export type SpinnerOptions = {
   colors?: boolean | ColorOptions;
   frames?: string[];
   symbols?: Partial<Symbols>;
+  disableNewLineEnding?: boolean;
 };
 
 type Style = Parameters<typeof util.styleText>[0];
@@ -51,7 +52,7 @@ export class Spinner {
   private component = new TextComponent('');
   private colors?: ColorOptions;
 
-  constructor(display: DisplayOptions | string = '', {colors, frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>}: SpinnerOptions = {}) {
+  constructor(display: DisplayOptions | string = '', {disableNewLineEnding, colors, frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>}: SpinnerOptions = {}) {
     // Merge symbols with defaults
     this.symbols = {...constants.DEFAULT_SYMBOLS, ...symbols};
 
@@ -63,6 +64,8 @@ export class Spinner {
         ...colors
       };
     }
+
+    if (disableNewLineEnding === true) this.component.disableNewLineEnding();
 
     if (typeof display === 'string') display = {text: display};
     delete display.symbol;
