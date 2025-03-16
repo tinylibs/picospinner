@@ -4,7 +4,7 @@ import {isAbsolute} from 'path';
 import {ColorOptions, DisplayOptions, Spinner, SpinnerOptions} from '../index.js';
 import * as util from 'node:util';
 
-export function createRenderedOutput(components: {symbol: string; symbolType?: keyof ColorOptions; text: string}[], firstLine = false, prevLines = -1, colors?: ColorOptions | boolean, symbolFormatter?: (v: string) => string) {
+export function createRenderedOutput(components: {symbol: string; symbolType?: keyof ColorOptions; text: string}[], firstLine = false, prevLines = -1, colors?: ColorOptions | boolean, symbolFormatter?: (v: string) => string, disableNewLineEnding?: boolean) {
   if (colors === true) colors = constants.DEFAULT_COLORS;
   else if (colors) colors = {...constants.DEFAULT_COLORS, ...colors};
 
@@ -14,16 +14,16 @@ export function createRenderedOutput(components: {symbol: string; symbolType?: k
     return text;
   };
 
-  let out = (!firstLine ? (constants.CLEAR_LINE + constants.UP_LINE).repeat(prevLines === -1 ? components.length : prevLines) : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR;
+  let out = (!firstLine && !disableNewLineEnding ? (constants.CLEAR_LINE + constants.UP_LINE).repeat(prevLines === -1 ? components.length : prevLines) : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR;
   for (const component of components) {
     const symbol = component.symbol ? (component.symbolType ? format(component.symbol, component.symbolType) : component.symbol) + ' ' : '';
-    out += symbol + format(component.text, 'text') + '\n';
+    out += symbol + format(component.text, 'text') + (!disableNewLineEnding ? '\n' : '');
   }
   return out;
 }
 
-export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false, colors?: ColorOptions | boolean, symbolType?: keyof ColorOptions, symbolFormatter?: (v: string) => string) {
-  return createRenderedOutput([{symbol, text, symbolType}], firstLine, -1, colors, symbolFormatter);
+export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false, colors?: ColorOptions | boolean, symbolType?: keyof ColorOptions, symbolFormatter?: (v: string) => string, disableNewLineEnding?: boolean) {
+  return createRenderedOutput([{symbol, text, symbolType}], firstLine, -1, colors, symbolFormatter, disableNewLineEnding);
 }
 
 export function createFinishingRenderedLine(symbol: string, text: string, colors?: ColorOptions | boolean, symbolType?: keyof ColorOptions, symbolFormatter?: (v: string) => string) {
