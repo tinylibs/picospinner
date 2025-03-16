@@ -5,6 +5,7 @@ export class TextComponent {
   onChange?: () => void;
   onFinish?: () => void;
   finished = false;
+  newLineEnding = true;
 
   constructor(public text: string) {}
 
@@ -23,6 +24,10 @@ export class TextComponent {
 
   output() {
     return this.text;
+  }
+
+  disableNewLineEnding() {
+    this.newLineEnding = false;
   }
 }
 
@@ -72,7 +77,7 @@ export class Renderer {
     let output = '';
     let finished = true;
     for (const component of this.components) {
-      output += component.output() + '\n';
+      output += component.output() + (component.newLineEnding ? '\n' : '');
       if (!component.finished) finished = false;
     }
 
@@ -86,13 +91,10 @@ export class Renderer {
   }
 
   clear() {
-    process.stdout.cursorTo(0);
     for (let i = 0; i < this.lastLinesAmt - 1; i++) {
-      process.stdout.moveCursor(0, -1);
-      if (i > 0) {
-        process.stdout.clearLine(1);
-      }
+      process.stdout.write(constants.CLEAR_LINE + constants.UP_LINE);
     }
+    process.stdout.write(constants.CLEAR_LINE);
   }
 
   _reset() {
