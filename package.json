@@ -41,7 +41,7 @@
     "@eslint/js": "^9.6.0",
     "@types/bun": "^1.1.6",
     "@types/capture-console": "^1.0.5",
-    "@types/node": "^20.14.9",
+    "@types/node": "^22.13.8",
     "c8": "^10.1.2",
     "capture-console": "^1.0.2",
     "fast-string-truncated-width": "^1.1.0",

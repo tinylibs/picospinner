@@ -1,22 +1,33 @@
 import capcon from 'capture-console';
 import * as constants from '../constants.js';
 import {isAbsolute} from 'path';
-import {DisplayOptions, Spinner, Symbols} from '../index.js';
+import {ColorOptions, DisplayOptions, Spinner, SpinnerOptions} from '../index.js';
+import * as util from 'node:util';
 
-export function createRenderedOutput(components: {symbol: string; text: string}[], firstLine = false, prevLines = -1) {
+export function createRenderedOutput(components: {symbol: string; symbolType?: keyof ColorOptions; text: string}[], firstLine = false, prevLines = -1, colors?: ColorOptions | boolean, symbolFormatter?: (v: string) => string) {
+  if (colors === true) colors = constants.DEFAULT_COLORS;
+  else if (colors) colors = {...constants.DEFAULT_COLORS, ...colors};
+
+  const format = (text: string, componentType: keyof ColorOptions) => {
+    if (colors && colors[componentType] && util.styleText) text = util.styleText(colors[componentType], text);
+    if (symbolFormatter && componentType !== 'text') return symbolFormatter(text);
+    return text;
+  };
+
   let out = (!firstLine ? (constants.CLEAR_LINE + constants.UP_LINE).repeat(prevLines === -1 ? components.length : prevLines) : '') + constants.CLEAR_LINE + constants.HIDE_CURSOR;
   for (const component of components) {
-    out += (component.symbol ? component.symbol + ' ' : '') + component.text + '\n';
+    const symbol = component.symbol ? (component.symbolType ? format(component.symbol, component.symbolType) : component.symbol) + ' ' : '';
+    out += symbol + format(component.text, 'text') + '\n';
   }
   return out;
 }
 
-export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false) {
-  return createRenderedOutput([{symbol, text}], firstLine);
+export function createRenderedLine(symbol: string, text: string, firstLine: boolean = false, colors?: ColorOptions | boolean, symbolType?: keyof ColorOptions, symbolFormatter?: (v: string) => string) {
+  return createRenderedOutput([{symbol, text, symbolType}], firstLine, -1, colors, symbolFormatter);
 }
 
-export function createFinishingRenderedLine(symbol: string, text: string) {
-  return createRenderedLine(symbol, text) + constants.SHOW_CURSOR;
+export function createFinishingRenderedLine(symbol: string, text: string, colors?: ColorOptions | boolean, symbolType?: keyof ColorOptions, symbolFormatter?: (v: string) => string) {
+  return createRenderedLine(symbol, text, false, colors, symbolType, symbolFormatter) + constants.SHOW_CURSOR;
 }
 
 const isMainCallstack = () => getCallstack().some((call) => call.includes('/dist/') && !call.includes('/test/') && !call.includes('/node_modules/'));
@@ -86,13 +97,7 @@ function getCallstack() {
 export class TickMeasuredSpinner extends Spinner {
   public tickCount = 0;
 
-  constructor(
-    display?: DisplayOptions | string,
-    opts?: {
-      frames?: string[] | undefined;
-      symbols?: Partial<Symbols> | undefined;
-    }
-  ) {
+  constructor(display?: DisplayOptions | string, opts?: SpinnerOptions) {
     super(display, opts);
 
     const originalTick = this.tick.bind(this);
