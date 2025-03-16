@@ -76,8 +76,9 @@ export class Renderer {
 
     let output = '';
     let finished = true;
-    for (const component of this.components) {
-      output += component.output() + (component.newLineEnding ? '\n' : '');
+    for (let i = 0; i < this.components.length; i++) {
+      const component = this.components[i];
+      output += component.output() + (i !== this.components.length - 1 || component.newLineEnding ? '\n' : '');
       if (!component.finished) finished = false;
     }
 
