@@ -16,14 +16,14 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write src",
-    "test": "npm run build && c8 --exclude-after-remap node --test",
+    "test": "tsc --sourcemap && c8 --exclude-after-remap node --test",
     "lint": "npm run lint:format && eslint src",
     "lint:format": "prettier --check src",
-    "bench": "tsc && node ./bench/string-width.mjs"
+    "bench": "npm run build && node ./bench/string-width.mjs"
   },
   "files": [
-    "./dist",
-    "!./dist/test"
+    "./dist/*.js",
+    "./dist/*.d.ts"
   ],
   "keywords": [
     "spinner",
