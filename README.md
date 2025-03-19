@@ -10,6 +10,10 @@ A lightweight, no dependency, pluggable CLI spinner library.
 npm i picospinner
 ```
 
+#### ESM & CommonJS
+
+As of version 3, this package is published exclusively as an [ES module](https://nodejs.org/api/esm.html#modules-ecmascript-modules). Recent Node.js versions (v20.17.0+) support [`require(esm)`](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require) in [CommonJS](https://nodejs.org/api/modules.html#modules-commonjs-modules). If a version with CommonJS syntax is required version 2 of this package can be installed with `npm i picospinner@2`. Version 2 will continue to be maintained in the [v2](https://github.com/tinylibs/picospinner/tree/v2) branch for the foreseeable future but will not receive new features.
+
 ## Usage
 
 ### Basic
@@ -17,9 +21,10 @@ npm i picospinner
 ```js
 import {Spinner} from 'picospinner';
 
-const spinner = new Spinner('Loading...', {colors: true});
+const spinner = new Spinner('Loading...');
 spinner.start();
 setTimeout(() => {
+  // Spinner can be ended with one of: succeed, fail, warn, info or stop
   spinner.succeed('Finished.');
 }, 5000);
 ```
@@ -32,8 +37,7 @@ import {Spinner} from 'picospinner';
 const spinner = new Spinner('Loading...', {
   symbols: {
     warn: '⚠'
-  },
-  colors: true
+  }
 });
 spinner.start();
 setTimeout(() => {
@@ -61,15 +65,13 @@ Calling `spinner.stop();` will stop the spinner and remove it.
 
 ### Colours
 
-As of version **2.1.0** colours can be easily applied with the `colors` option which uses the [`styleText`](https://nodejs.org/api/util.html#utilstyletextformat-text-options) function from [`node:util`](https://nodejs.org/api/util.html) if it is available (Node versions greater than **22.0.0**, **21.7.0** or **20.12.0**). If it's not available, no colours will be displayed.
+As of version **3.0.0** colours are enabled by default. This feature uses the [`styleText`](https://nodejs.org/api/util.html#utilstyletextformat-text-options) function from [`node:util`](https://nodejs.org/api/util.html) if it is available (Node versions greater than **22.0.0**, **21.7.0** or **20.12.0**). If it's not available, no colours will be displayed.
 
-The option accepts a boolean value controlling whether or not to display the default colours or it can be passed an object defining styles for each component type as shown below:
+The `colors` option can be passed to disable colours or customise the colours. The option accepts a boolean value controlling whether or not to display the default colours or it can be passed an object defining styles for each component type as shown below:
 
 ```js
-// Create spinner with default colours
-const spinner = new Spinner('Loading...', {
-  colors: true
-});
+// Create spinner with no colours
+const spinner = new Spinner('Loading...', {colors: false});
 
 // Create spinner with custom colours
 const spinner = new Spinner('Loading...', {
