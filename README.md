@@ -10,6 +10,10 @@ A lightweight, no dependency, pluggable CLI spinner library.
 npm i picospinner
 ```
 
+#### ESM & CommonJS
+
+As of version 3, this package is published exclusively as an [ES module](https://nodejs.org/api/esm.html#modules-ecmascript-modules). Recent Node.js versions (v20.17.0+) support [`require(esm)`](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require) in [CommonJS](https://nodejs.org/api/modules.html#modules-commonjs-modules). If a version with CommonJS syntax is required version 2 of this package can be installed with `npm i picospinner@2`. Version 2 will continue to be maintained in the [v2](https://github.com/tinylibs/picospinner/tree/v2) branch for the foreseeable future but will not receive new features.
+
 ## Usage
 
 ### Basic
