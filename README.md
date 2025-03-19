@@ -21,9 +21,10 @@ As of version 3, this package is published exclusively as an [ES module](https:/
 ```js
 import {Spinner} from 'picospinner';
 
-const spinner = new Spinner('Loading...', {colors: true});
+const spinner = new Spinner('Loading...');
 spinner.start();
 setTimeout(() => {
+  // Spinner can be ended with one of: succeed, fail, warn, info or stop
   spinner.succeed('Finished.');
 }, 5000);
 ```
@@ -36,8 +37,7 @@ import {Spinner} from 'picospinner';
 const spinner = new Spinner('Loading...', {
   symbols: {
     warn: '⚠'
-  },
-  colors: true
+  }
 });
 spinner.start();
 setTimeout(() => {
@@ -65,15 +65,13 @@ Calling `spinner.stop();` will stop the spinner and remove it.
 
 ### Colours
 
-As of version **2.1.0** colours can be easily applied with the `colors` option which uses the [`styleText`](https://nodejs.org/api/util.html#utilstyletextformat-text-options) function from [`node:util`](https://nodejs.org/api/util.html) if it is available (Node versions greater than **22.0.0**, **21.7.0** or **20.12.0**). If it's not available, no colours will be displayed.
+As of version **3.0.0** colours are enabled by default. This feature uses the [`styleText`](https://nodejs.org/api/util.html#utilstyletextformat-text-options) function from [`node:util`](https://nodejs.org/api/util.html) if it is available (Node versions greater than **22.0.0**, **21.7.0** or **20.12.0**). If it's not available, no colours will be displayed.
 
-The option accepts a boolean value controlling whether or not to display the default colours or it can be passed an object defining styles for each component type as shown below:
+The `colors` option can be passed to disable colours or customise the colours. The option accepts a boolean value controlling whether or not to display the default colours or it can be passed an object defining styles for each component type as shown below:
 
 ```js
-// Create spinner with default colours
-const spinner = new Spinner('Loading...', {
-  colors: true
-});
+// Create spinner with no colours
+const spinner = new Spinner('Loading...', {colors: false});
 
 // Create spinner with custom colours
 const spinner = new Spinner('Loading...', {
