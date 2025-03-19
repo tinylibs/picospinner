@@ -57,12 +57,13 @@ export class Spinner {
     this.symbols = {...constants.DEFAULT_SYMBOLS, ...symbols};
 
     // Setup colors if the option is passed
-    if (colors === true) this.colors = constants.DEFAULT_COLORS;
-    else if (typeof colors === 'object') {
+    if (typeof colors === 'object') {
       this.colors = {
         ...constants.DEFAULT_COLORS,
         ...colors
       };
+    } else if (colors !== false) {
+      this.colors = constants.DEFAULT_COLORS;
     }
 
     if (disableNewLineEnding === true) this.component.disableNewLineEnding();

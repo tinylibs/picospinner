@@ -5,7 +5,7 @@ import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, i
 import process from 'node:process';
 import * as constants from '../constants.js';
 
-async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string, colors?: boolean | ColorOptions) {
+async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string, colors: boolean | ColorOptions = false) {
   renderer._reset();
 
   const stdout = await interceptStdout(async () => {
@@ -55,7 +55,7 @@ test('end methods', async (t) => {
 
   await t.test('.stop', async () => {
     const stdout = await interceptStdout(async () => {
-      const spinner = new Spinner();
+      const spinner = new Spinner(undefined, {colors: false});
       spinner.start();
       spinner.stop();
     });
@@ -65,7 +65,7 @@ test('end methods', async (t) => {
 
   await t.test('set display with no symbol', async () => {
     const stdout = await interceptStdout(async () => {
-      const spinner = new Spinner();
+      const spinner = new Spinner(undefined, {colors: false});
       spinner.start();
       spinner.setDisplay({symbol: ''});
     });
@@ -83,7 +83,7 @@ test('end methods', async (t) => {
 
     try {
       const stdout = await interceptStdout(async () => {
-        const spinner = new Spinner();
+        const spinner = new Spinner(undefined, {colors: false});
         spinner.start();
         // TODO (43081j): maybe this'll spook other things? if something is
         // listening for SIGTERM
@@ -107,7 +107,7 @@ test('end methods', async (t) => {
 
     try {
       await interceptStdout(async () => {
-        const spinner = new Spinner();
+        const spinner = new Spinner(undefined, {colors: false});
         spinner.start();
         // TODO (43081j): maybe this'll spook other things? if something is
         // listening for SIGTERM
@@ -123,7 +123,7 @@ test('end methods', async (t) => {
   await t.test('restart finished spinner with new component', async () => {
     const unsuppressStdout = suppressStdout();
 
-    const spinner = new Spinner();
+    const spinner = new Spinner(undefined, {colors: false});
     try {
       spinner.start();
       spinner.succeed();
@@ -142,6 +142,7 @@ test('end methods', async (t) => {
 
 async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string, colors?: ColorOptions | boolean, disableNewLineEnding?: boolean) {
   renderer._reset();
+  if (!colors) colors = false;
 
   const spinner = new TickMeasuredSpinner({text, symbolFormatter}, {frames, colors, disableNewLineEnding});
 
@@ -183,7 +184,7 @@ test('spinner', async (t) => {
     const stdout = await interceptStdout(
       () =>
         new Promise((resolve) => {
-          const spinner = new Spinner('foo');
+          const spinner = new Spinner('foo', {colors: false});
           spinner.start();
           setTimeout(() => spinner.setText('bar'), 400);
           setTimeout(() => spinner.setText('baz'), 700);
@@ -199,9 +200,9 @@ test('spinner', async (t) => {
   });
   await t.test('renders multiple spinners', async () => {
     const stdout = await interceptStdout(() => {
-      const spinner1 = new Spinner('foo');
+      const spinner1 = new Spinner('foo', {colors: false});
       spinner1.start();
-      const spinner2 = new Spinner('bar');
+      const spinner2 = new Spinner('bar', {colors: false});
       spinner2.start();
       spinner1.stop();
       spinner2.stop();
