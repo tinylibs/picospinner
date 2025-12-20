@@ -118,6 +118,15 @@ spinner.fail({
 });
 ```
 
+You can also use a formatter to add suffixes and prefixes:
+
+```js
+const spinner = new Spinner({
+  ...opts,
+  symbolFormatter: (str) => `Prefix ${str} Suffix`
+});
+```
+
 ### Custom rotation speed
 
 A custom tick speed (how often the spinner rotates) in milliseconds can be passed to `spinner.start`:
