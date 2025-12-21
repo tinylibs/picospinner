@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write src",
-    "test": "tsc --sourcemap && c8 --exclude-after-remap node --test",
+    "test": "tsc --sourcemap && c8 --exclude-after-remap node --test dist/**/*-test.js",
     "lint": "npm run lint:format && eslint src",
     "lint:format": "prettier --check src",
     "bench": "npm run build && node ./bench/string-width.mjs"
