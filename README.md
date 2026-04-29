@@ -63,6 +63,19 @@ setTimeout(() => {
 
 Calling `spinner.stop();` will stop the spinner and remove it.
 
+### Output stream
+
+Spinners write to `process.stdout` by default. To keep stdout available for machine-readable output, pass another stream such as `process.stderr`:
+
+```js
+import {Spinner} from 'picospinner';
+
+const spinner = new Spinner({
+  text: 'Loading...',
+  stream: process.stderr
+});
+```
+
 ### Colours
 
 As of version **3.0.0** colours are enabled by default. This feature uses the [`styleText`](https://nodejs.org/api/util.html#utilstyletextformat-text-options) function from [`node:util`](https://nodejs.org/api/util.html) if it is available (Node versions greater than **22.0.0**, **21.7.0** or **20.12.0**). If it's not available, no colours will be displayed.

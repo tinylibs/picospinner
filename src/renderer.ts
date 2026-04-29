@@ -1,5 +1,10 @@
 import * as constants from './constants.js';
 import {countLines} from './string-lines.js';
+import type {Writable} from 'node:stream';
+
+export interface OutputStream extends Writable {
+  getWindowSize?: () => [number, number];
+}
 
 export class TextComponent {
   onChange?: () => void;
@@ -38,14 +43,17 @@ export class Renderer {
   private finishedComponents = 0;
   private outputBuffer = '';
 
-  constructor(public hideCursor: boolean = true) {}
+  constructor(
+    public hideCursor: boolean = true,
+    private stream: OutputStream = process.stdout
+  ) {}
 
   addComponent(component: TextComponent) {
     this.components.push(component);
     component.onChange = this.render.bind(this);
     component.onFinish = this.onComponentFinish.bind(this);
 
-    if (process.stdout.getWindowSize) this.terminalWidth = process.stdout.getWindowSize()[0];
+    if (this.stream.getWindowSize) this.terminalWidth = this.stream.getWindowSize()[0];
     this.render();
   }
 
@@ -53,7 +61,7 @@ export class Renderer {
     this.finishedComponents++;
     if (this.finishedComponents === this.components.length) {
       this._reset();
-      process.stdout.write(constants.SHOW_CURSOR);
+      this.stream.write(constants.SHOW_CURSOR);
     }
   }
 
@@ -69,8 +77,8 @@ export class Renderer {
     this.clear();
 
     if (this.components.length === 0) {
-      process.stdout.write(this.outputBuffer);
-      if (this.hideCursor) process.stdout.write(constants.SHOW_CURSOR);
+      this.stream.write(this.outputBuffer);
+      if (this.hideCursor) this.stream.write(constants.SHOW_CURSOR);
       this.lastLinesAmt = 0;
       return;
     }
@@ -93,7 +101,7 @@ export class Renderer {
       this.outputBuffer += constants.SHOW_CURSOR;
     }
 
-    process.stdout.write(this.outputBuffer);
+    this.stream.write(this.outputBuffer);
   }
 
   clear() {

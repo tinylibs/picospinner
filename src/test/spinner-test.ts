@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {ColorOptions, Spinner, Symbols, renderer} from '../index.js';
-import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStdout, suppressStdout, TickMeasuredSpinner} from './utils.js';
+import {createFinishingRenderedLine, createRenderedLine, createRenderedOutput, interceptStderr, interceptStdout, suppressStdout, TickMeasuredSpinner} from './utils.js';
 import process from 'node:process';
 import * as constants from '../constants.js';
 
@@ -254,4 +254,19 @@ test('spinner', async (t) => {
   );
   await t.test('displays colors with symbol formatter', () => testSpinner(undefined, 'lorem ipsum dolor', (s) => `a${s}a`, true));
   await t.test('disableNewLineEnding prevents ending new line', () => testSpinner(undefined, undefined, undefined, undefined, true));
+  await t.test('writes to configured stream', async () => {
+    renderer._reset();
+
+    let stdout = '';
+    const stderr = await interceptStderr(async () => {
+      stdout = await interceptStdout(async () => {
+        const spinner = new Spinner({stream: process.stderr}, {colors: false});
+        spinner.start();
+        spinner.stop();
+      });
+    });
+
+    assert.equal(stdout, '');
+    assert.equal(stderr, createRenderedLine(constants.DEFAULT_FRAMES[0], '', true) + constants.CLEAR_LINE + constants.UP_LINE + constants.CLEAR_LINE + constants.SHOW_CURSOR);
+  });
 });

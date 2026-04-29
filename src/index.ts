@@ -1,6 +1,8 @@
 import * as constants from './constants.js';
-import {Renderer, TextComponent} from './renderer.js';
+import {Renderer, TextComponent, type OutputStream} from './renderer.js';
 import * as util from 'node:util';
+
+export type {OutputStream} from './renderer.js';
 
 export type Formatter = (input: string) => string;
 
@@ -9,6 +11,7 @@ export type DisplayOptions = {
   text?: string;
   symbol?: string;
   symbolType?: 'succeed' | 'fail' | 'warn' | 'info' | 'spinner';
+  stream?: OutputStream;
 };
 
 export type SpinnerOptions = {
@@ -39,6 +42,8 @@ export type Symbols = {
 // Global renderer so that multiple spinners can run at the same time
 export const renderer = new Renderer();
 
+const renderersByStream = new WeakMap<OutputStream, Renderer>([[process.stdout, renderer]]);
+
 export class Spinner {
   public running = false;
 
@@ -51,6 +56,8 @@ export class Spinner {
   private frames: string[];
   private component = new TextComponent('');
   private colors?: ColorOptions;
+  private stream: OutputStream = process.stdout;
+  private outputRenderer = renderer;
 
   constructor(display: DisplayOptions | string = '', {disableNewLineEnding, colors, frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>}: SpinnerOptions = {}) {
     // Merge symbols with defaults
@@ -85,7 +92,7 @@ export class Spinner {
     this.currentSymbol = this.frames[0];
 
     this.tick();
-    renderer.addComponent(this.component);
+    this.outputRenderer.addComponent(this.component);
     this.addListeners();
   }
 
@@ -130,6 +137,7 @@ export class Spinner {
   }
 
   setDisplay(displayOpts: DisplayOptions = {}, render = true) {
+    if (displayOpts.stream) this.setStream(displayOpts.stream);
     if (typeof displayOpts.symbol === 'string') {
       if (typeof displayOpts.symbolType === 'string') {
         this.currentSymbol = this.format(displayOpts.symbol, displayOpts.symbolType);
@@ -140,6 +148,23 @@ export class Spinner {
 
     if (render) this.refresh();
     if (typeof displayOpts.symbol === 'string') this.end();
+  }
+
+  private setStream(stream: OutputStream) {
+    if (stream === this.stream) return;
+
+    const wasRunning = this.running;
+    if (wasRunning) this.outputRenderer.removeComponent(this.component);
+
+    this.stream = stream;
+    let outputRenderer = renderersByStream.get(stream);
+    if (!outputRenderer) {
+      outputRenderer = new Renderer(true, stream);
+      renderersByStream.set(stream, outputRenderer);
+    }
+    this.outputRenderer = outputRenderer;
+
+    if (wasRunning) this.outputRenderer.addComponent(this.component);
   }
 
   setText(text: string, render = true) {
@@ -177,7 +202,7 @@ export class Spinner {
     clearInterval(this.interval);
     this.clearListeners();
     if (keepComponent) this.component.finish();
-    else renderer.removeComponent(this.component);
+    else this.outputRenderer.removeComponent(this.component);
     this.running = false;
   }
 
