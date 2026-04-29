@@ -42,23 +42,31 @@ export function suppressStdout() {
   return () => (process.stdout.write = stdoutWrite);
 }
 
-export async function interceptStdout(exec: () => Promise<void> | void) {
+async function interceptOutput(stream: NodeJS.WriteStream, exec: () => Promise<void> | void) {
   let output = '';
-  const stdoutWrite = process.stdout.write.bind(process.stdout);
+  const streamWrite = stream.write.bind(stream);
 
   // @ts-expect-error - types are wrong here for the callback
-  capcon.startIntercept(process.stdout, (data: string) => {
-    // Since stdout is used to communicate test data, the interceptor should write data that is not from picospinner to stdout
+  capcon.startIntercept(stream, (data: string) => {
+    // Since output streams are used to communicate test data, the interceptor should write data that is not from picospinner back to the stream
     if (isMainCallstack()) {
       output += data;
-    } else stdoutWrite(data);
+    } else streamWrite(data);
   });
 
   await exec();
 
-  capcon.stopIntercept(process.stdout);
+  capcon.stopIntercept(stream);
 
   return output;
+}
+
+export function interceptStdout(exec: () => Promise<void> | void) {
+  return interceptOutput(process.stdout, exec);
+}
+
+export function interceptStderr(exec: () => Promise<void> | void) {
+  return interceptOutput(process.stderr, exec);
 }
 
 function getCallstack() {
